@@ -13,6 +13,25 @@ const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
+function loadAppProperties(filepath) {
+  if (!fs.existsSync(filepath)) return;
+  const content = fs.readFileSync(filepath, 'utf8');
+  content.split(/\r?\n/).forEach(line => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) return;
+    const idx = trimmed.indexOf('=');
+    if (idx === -1) return;
+    const key = trimmed.slice(0, idx).trim();
+    const value = trimmed.slice(idx + 1).trim();
+    if (process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  });
+}
+
+loadAppProperties(path.join(__dirname, 'application.properties'));
+require('dotenv').config({ override: true });
+
 const app = express();
 const PORT = Number(process.env.PORT) || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'ecolearn-secret-change-in-production';
